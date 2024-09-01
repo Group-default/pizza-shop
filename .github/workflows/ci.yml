@@ -1,0 +1,26 @@
+# Este fluxo de trabalho fará uma instalação limpa das dependências do nó, armazenará em cache/restaurará, construirá o código-fonte e executará testes em diferentes versões do nó
+# Para obter mais informações, consulte: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: ci-node-worlflows
+
+on: [pull_request] 
+
+jobs:
+  check-app-application:
+    
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run test

@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+   postgres:
+    container_name: pizzadrua-postgre
+    image: bitnami/postgresql
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRESQL_USERNAME=pizzadrua
+      - POSTGRESQL_PASSWORD=pizzadrua
+      - POSTGRESQL_DATABASE=pizzadrua-postgre
+      
+   pizzadrua-api:
+    image: node:alpine
+    restart: always
+    build: .
+    tty: true
+    stdin_open: true
+    container_name: pizzadrua-api
+    working_dir: /app
+    ports:
+      - 3001:3001
+    environment:
+      - NODE_ENV=dev
+      - JWT_SECRET=secret
+      - DATABASE_URL=postgresql://pizzadrua:pizzadrua@postgres:5432/pizzadrua-postgre?schema=public
+    volumes:
+      - ./:/app
+    depends_on:
+      - postgres 

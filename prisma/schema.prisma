@@ -1,0 +1,157 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String
+  avatarUrl      String?
+  phone          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  password       String?
+  withdrawalName String?
+  role           ROLE      @default(CUSTOMER)
+  Address        Address[]
+  Order          Order[]
+  Account        Account[]
+}
+
+enum AccountProvider {
+  GITHUB
+  GOOGLE
+}
+
+model Account {
+  id                String          @id @default(uuid())
+  provider          AccountProvider
+  providerAccountId String          @unique @map("provider_account_id")
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  customerId        String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime?
+
+  @@unique([provider, customerId])
+  @@map("accounts")
+}
+
+model Address {
+  id             String       @id @default(uuid())
+  customerId     String
+  neighborhoodId String
+  number         String
+  zipCode        String
+  phone          String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime?
+  standard       Boolean      @default(true)
+  type           TYPEADDRESS  @default(HOME)
+  street         String
+  customer       Customer     @relation(fields: [customerId], references: [id])
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id])
+}
+
+model Neighborhood {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime?
+  tax       String
+  status    NEIGHBORHOOD @default(ACTIVE)
+  Address   Address[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  Product   Product[]
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  categoryId  String
+  name        String
+  description String
+  price       String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime?
+  status      TYPEPRODUCT @default(ACTIVE)
+  imageUrl    String
+  type        String?
+  size        String?
+  category    Category    @relation(fields: [categoryId], references: [id])
+}
+
+model ImageProduct {
+  id        String    @id @default(uuid())
+  pathImage String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model Order {
+  id             String    @id @default(uuid())
+  customerId     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  status         STATUS    @default(WAITING)
+  observation    String?
+  totalPrice     String
+  payment        Json
+  address        Json?
+  itensOrder     Json
+  methodDelivery String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+}
+
+model Payment {
+  id         String    @id @default(uuid())
+  name       String?
+  endToEndId String
+  value      String
+  txid       String
+  key        String
+  time       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime?
+}
+
+enum STATUS {
+  WAITING
+  ACCEPTED
+  PREPARING
+  DELIVERY
+  FINISHED
+  CANCELED
+  AWAITING_WITHDRAWAL
+}
+
+enum TYPEADDRESS {
+  HOME
+  WORK
+  OTHER
+}
+
+enum TYPEPRODUCT {
+  ACTIVE
+  DISABLE
+}
+
+enum NEIGHBORHOOD {
+  ACTIVE
+  DISABLE
+}
+
+enum ROLE {
+  CUSTOMER
+  ADMIN
+}
